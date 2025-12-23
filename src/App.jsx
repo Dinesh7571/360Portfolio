@@ -1,16 +1,4 @@
 import React, { useEffect } from 'react'
-import {
-  Mail,
-  Github,
-  Linkedin,
-  MapPin,
-  Phone,
-  Code2,
-  Briefcase,
-  GraduationCap,
-  ExternalLink,
-} from 'lucide-react'
-
 
 function App() {
   return (
@@ -29,10 +17,10 @@ function App() {
 
 
 function FrameScroller() {
-  const TOTAL_FRAMES = 192
+  const TOTAL_FRAMES = 160
   const FIRST_FRAME_INDEX = 1
 
-  const formatFrameNumber = (index) => String(index).padStart(5, '0')
+  const formatFrameNumber = (index) => String(index).padStart(3, '0')
 
   const [frameIndex, setFrameIndex] = React.useState(FIRST_FRAME_INDEX)
   const [scrollProgress, setScrollProgress] = React.useState(0)
@@ -44,7 +32,7 @@ function FrameScroller() {
 
     for (let i = FIRST_FRAME_INDEX; i <= TOTAL_FRAMES; i++) {
       const img = new Image()
-      img.src = `/profile/${formatFrameNumber(i)}.png`
+      img.src = `/profile2/ezgif-frame-${formatFrameNumber(i)}.jpg`
 
       img.onload = () => {
         loadedCount++
@@ -97,7 +85,7 @@ function FrameScroller() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [loaded])
 
-  const src = `/profile/${formatFrameNumber(frameIndex)}.png`
+  const src = `/profile2/ezgif-frame-${formatFrameNumber(frameIndex)}.jpg`
 
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden w-full">
