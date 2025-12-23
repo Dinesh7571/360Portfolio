@@ -1,22 +1,205 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 
+function RevealSection({ children, delay = 0, direction = 'up' }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = React.useState(false)
+  const [progress, setProgress] = React.useState(0)
 
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    let hasTriggered = false
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTriggered) {
+          hasTriggered = true
+          setVisible(true)
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px',
+      },
+    )
+
+    const handleScroll = () => {
+      const rect = el.getBoundingClientRect()
+      const windowHeight = window.innerHeight
+      const elementTop = rect.top
+      const elementHeight = rect.height
+      
+      // Calculate progress based on scroll position
+      const scrollProgress = Math.max(
+        0,
+        Math.min(
+          1,
+          (windowHeight - elementTop + elementHeight * 0.5) / (windowHeight + elementHeight)
+        )
+      )
+      setProgress(scrollProgress)
+    }
+
+    observer.observe(el)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Calculate transforms based on direction and visibility
+  const getInitialTransform = () => {
+    if (direction === 'left') return -120
+    if (direction === 'right') return 120
+    return 80
+  }
+
+  const initialTransform = getInitialTransform()
+  const translateX = direction === 'left' || direction === 'right' 
+    ? initialTransform * (1 - progress) 
+    : 0
+  const translateY = direction === 'up' 
+    ? initialTransform * (1 - progress) 
+    : 0
+
+  const opacity = Math.min(1, progress * 2)
+  const scale = 0.85 + progress * 0.15
+
+  return (
+    <section
+      ref={ref}
+      className="will-change-transform"
+      style={{
+        opacity: visible ? opacity : 0,
+        transform: `translateX(${translateX}px) translateY(${translateY}px) scale(${visible ? scale : 0.85})`,
+        transition: visible 
+          ? `opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 1.2s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`
+          : 'none',
+      }}
+    >
+      {children}
+    </section>
+  )
+}
 
 function App() {
   return (
-    <div className="relative min-h-[300vh]  text-slate-100">
+    <div className="relative min-h-[320vh]  text-slate-100">
       {/* Fixed background FrameScroller */}
       <FrameScroller />
 
-      {/* Foreground content */}
-      <div className="relative z-10">
+      {/* Foreground content - Left and Right sides only */}
+      <div className="relative z-10 min-h-[300vh]">
+        <main className="flex min-h-screen justify-between px-8 pb-24 pt-32 lg:px-20 lg:pb-40 lg:pt-40">
+          {/* Left Side Content */}
+          <div className="flex w-[45%] flex-col gap-32 lg:gap-40">
+            <RevealSection direction="left" delay={0}>
+              <div className="space-y-6">
+                <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-gray-900 opacity-90">
+                  PROFILE
+                </p>
+                <h1 className="text-5xl font-black tracking-tight text-gray-900 lg:text-7xl">
+                  Dinesh<br />Kannaujiya
+                </h1>
+                <div className="space-y-2">
+                  <p className="text-xl font-bold text-gray-800 lg:text-2xl">
+                    Software Engineer
+                  </p>
+                  <p className="text-sm font-medium text-gray-700 lg:text-base">
+                    B.Tech — Computer Science &amp; Engineering
+                  </p>
+                </div>
+              </div>
+            </RevealSection>
 
+            <RevealSection direction="left" delay={200}>
+              <div className="space-y-6">
+                <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-gray-900 opacity-90">
+                  SKILLS
+                </h2>
+                <div className="flex flex-wrap gap-2.5">
+                  {[
+                    'React Native',
+                    'React.js',
+                    'Node.js',
+                    'Express',
+                    'MongoDB',
+                    'Tailwind CSS',
+                    'Android',
+                    'Firebase',
+                    'Git',
+                  ].map((skill) => (
+                    <span
+                      key={skill}
+                      className="inline-block rounded-full border-2 border-gray-900 bg-white/95 px-4 py-2 text-sm font-bold text-gray-900 shadow-lg backdrop-blur-sm transition-all duration-500 hover:scale-105"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </RevealSection>
+          </div>
+
+          {/* Center - Blank */}
+          <div className="w-[10%]" />
+
+          {/* Right Side Content */}
+          <div className="flex w-[45%] flex-col gap-32 lg:gap-40">
+            <RevealSection direction="right" delay={100}>
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-gray-900 opacity-90 mb-4">
+                    CONTACT
+                  </h2>
+                  <div className="space-y-4 text-base">
+                    <div className="flex items-center justify-between gap-4 border-b border-gray-300 pb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                        Email
+                      </span>
+                      <span className="text-right text-sm font-semibold text-gray-900">
+                        kannaujiya00000@gmail.com
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 border-b border-gray-300 pb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                        GitHub
+                      </span>
+                      <span className="text-right text-sm font-semibold text-gray-900">
+                        Available on request
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 border-b border-gray-300 pb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                        LinkedIn
+                      </span>
+                      <span className="text-right text-sm font-semibold text-gray-900">
+                        Available on request
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h2 className="text-[10px] font-bold tracking-[0.3em] uppercase text-gray-900 opacity-90 mb-4">
+                    LOCATION
+                  </h2>
+                  <p className="text-lg font-bold text-gray-900 lg:text-xl">
+                    Deoria, Uttar Pradesh, India
+                  </p>
+                </div>
+              </div>
+            </RevealSection>
+          </div>
+        </main>
       </div>
     </div>
   )
 }
-
-
 
 function FrameScroller() {
   const TOTAL_FRAMES = 192
@@ -90,14 +273,11 @@ function FrameScroller() {
   const src = `/profile/${formatFrameNumber(frameIndex)}.png`
 
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden w-full">
-      {/* Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_60%),_radial-gradient(circle_at_bottom,_rgba(129,140,248,0.16),_transparent_60%)]" />
-
+    <div className="pointer-events-none fixed inset-0 -z-10 w-full overflow-hidden ">
       <div className="relative flex h-full w-full items-center justify-center">
         <div className="relative h-full w-full">
           {!loaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black">
+            <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-slate-300 text-sm tracking-wide">
                 Loading animation…
               </span>
@@ -111,27 +291,6 @@ function FrameScroller() {
               className="h-full w-full object-cover"
               draggable={false}
             />
-          )}
-
-          {/* Debug HUD */}
-          {loaded && (
-            <div className="pointer-events-none absolute bottom-4 right-4 flex gap-3 text-[10px] text-slate-200">
-              <div className="rounded-full bg-black/70 px-3 py-1.5 backdrop-blur-md">
-                <span className="text-slate-400">Frame</span>{' '}
-                <span className="font-mono text-sky-300">
-                  {String(frameIndex).padStart(3, '0')}
-                </span>
-                <span className="text-slate-500"> / {TOTAL_FRAMES}</span>
-              </div>
-
-              <div className="rounded-full bg-black/70 px-3 py-1.5 backdrop-blur-md">
-                <span className="text-slate-400">Scroll</span>{' '}
-                <span className="font-mono text-sky-300">
-                  {(scrollProgress * 100).toFixed(0)}
-                </span>
-                <span className="text-slate-500">%</span>
-              </div>
-            </div>
           )}
         </div>
       </div>
