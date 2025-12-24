@@ -72,15 +72,11 @@ function FrameScroller() {
     const src = `/profile2/ezgif-frame-${formatFrameNumber(frameIndex)}.png`
   
     return (
-      <div className="pointer-events-none fixed inset-0 -z-10 w-full overflow-hidden ">
+      <div className="pointer-events-none fixed inset-0 -z-10 w-full overflow-hidden pt-10 bg-[#eaeef1] ">
         <div className="relative flex h-full w-full items-center justify-center">
           <div className="relative h-full w-full">
             {!loaded && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-slate-300 text-sm tracking-wide">
-                  Loading animation…
-                </span>
-              </div>
+              <div className="absolute inset-0 bg-[#eaeef1]"></div>
             )}
   
             {loaded && (
