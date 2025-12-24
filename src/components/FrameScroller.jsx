@@ -1,41 +1,39 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 function FrameScroller() {
-    const TOTAL_FRAMES = 30
-    const FIRST_FRAME_INDEX = 1
-  
-    const formatFrameNumber = (index) => String(index).padStart(3, '0')
-  
-    const [frameIndex, setFrameIndex] = useState(FIRST_FRAME_INDEX)
-    const [scrollProgress, setScrollProgress] =useState(0)
+    const videoRef = useRef(null)
     const [loaded, setLoaded] = useState(false)
+    const [videoDuration, setVideoDuration] = useState(0)
+    const lastScrollY = useRef(0)
+    const lastTime = useRef(0)
   
     useEffect(() => {
-      let loadedCount = 0
-      const images = []
+      const video = videoRef.current
+      if (!video) return
   
-      for (let i = FIRST_FRAME_INDEX; i <= TOTAL_FRAMES; i++) {
-        const img = new Image()
-        img.src = `/profile2/ezgif-frame-${formatFrameNumber(i)}.png`
+      const handleLoadedMetadata = () => {
+        setVideoDuration(video.duration)
+        setLoaded(true)
+        // Set initial video time to 0
+        video.currentTime = 0
+      }
   
-        img.onload = () => {
-          loadedCount++
-          if (loadedCount === TOTAL_FRAMES) {
-            setLoaded(true)
-          }
-        }
+      video.addEventListener('loadedmetadata', handleLoadedMetadata)
   
-        images.push(img)
+      return () => {
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata)
       }
     }, [])
   
     /* -------------------------------------------------
-     Scroll handler (RAF throttled)
+     Scroll handler (RAF throttled) - controls video playback
+     Video plays forward on scroll down, reverse on scroll up
     --------------------------------------------------*/
-      useEffect(() => {
-      if (!loaded) return
+    useEffect(() => {
+      if (!loaded || !videoRef.current) return
   
       let ticking = false
+      const video = videoRef.current
   
       const handleScroll = () => {
         if (ticking) return
@@ -46,19 +44,18 @@ function FrameScroller() {
           const docHeight =
             document.documentElement.scrollHeight - window.innerHeight
   
-          const progress = docHeight > 0 ? scrollY / docHeight : 0
-  
-          const mappedIndex =
-            FIRST_FRAME_INDEX +
-            Math.floor(progress * (TOTAL_FRAMES - 1))
-  
-          const clampedIndex = Math.min(
-            TOTAL_FRAMES,
-            Math.max(FIRST_FRAME_INDEX, mappedIndex),
-          )
-  
-          setScrollProgress(progress)
-          setFrameIndex(clampedIndex)
+          const progress = docHeight > 0 ? Math.max(0, Math.min(1, scrollY / docHeight)) : 0
+          
+          // Calculate video time based on scroll progress
+          const targetTime = progress * videoDuration
+          
+          // Update video time - this naturally handles forward/reverse
+          // When scrolling down, progress increases, video plays forward
+          // When scrolling up, progress decreases, video plays in reverse
+          video.currentTime = targetTime
+          
+          lastScrollY.current = scrollY
+          lastTime.current = Date.now()
   
           ticking = false
         })
@@ -67,26 +64,27 @@ function FrameScroller() {
       handleScroll()
       window.addEventListener('scroll', handleScroll, { passive: true })
       return () => window.removeEventListener('scroll', handleScroll)
-    }, [loaded])
-  
-    const src = `/profile2/ezgif-frame-${formatFrameNumber(frameIndex)}.png`
+    }, [loaded, videoDuration])
   
     return (
-      <div className="pointer-events-none fixed inset-0 -z-10 w-full overflow-hidden pt-10 bg-[#eaeef1] ">
+      <div className="pointer-events-none fixed inset-0 -z-10 w-full overflow-hidden pt-10 bg-[#eaeef1]">
         <div className="relative flex h-full w-full items-center justify-center">
           <div className="relative h-full w-full">
             {!loaded && (
               <div className="absolute inset-0 bg-[#eaeef1]"></div>
             )}
   
-            {loaded && (
-              <img
-                src={src}
-                alt={`Frame ${frameIndex}`}
-                className="h-full w-full object-cover"
-                draggable={false}
-              />
-            )}
+            <video
+              ref={videoRef}
+              className="h-full w-full object-cover outline-none focus:outline-none border-none"
+              playsInline
+              muted
+              preload="metadata"
+              style={{ display: loaded ? 'block' : 'none' }}
+            >
+              <source src="/profile2/video.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
           </div>
         </div>
       </div>
