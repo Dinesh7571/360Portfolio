@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import FrameScroller from './components/FrameScroller'
 
 function RevealSection({ children, delay = 0, direction = 'up' }) {
   const ref = useRef(null)
@@ -102,8 +103,8 @@ function App() {
                 <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-gray-900 opacity-90">
                   PROFILE
                 </p>
-                <h1 className="text-5xl font-black tracking-tight text-gray-900 lg:text-7xl">
-                  Dinesh<br />Kannaujiya
+                <h1 className="text-5xl font-black tracking-tight text-gray-900 lg:text-7xl ">
+                  Dinesh<br /><span className=''>Kannaujiya</span>
                 </h1>
                 <div className="space-y-2">
                   <p className="text-xl font-bold text-gray-800 lg:text-2xl">
@@ -149,7 +150,7 @@ function App() {
           <div className="w-[10%]" />
 
           {/* Right Side Content */}
-          <div className="flex w-[45%] flex-col gap-32 lg:gap-40">
+          <div className="flex w-[35%] flex-col gap-32 lg:gap-40">
             <RevealSection direction="right" delay={100}>
               <div className="space-y-8">
                 <div>
@@ -196,103 +197,6 @@ function App() {
             </RevealSection>
           </div>
         </main>
-      </div>
-    </div>
-  )
-}
-
-function FrameScroller() {
-  const TOTAL_FRAMES = 192
-  const FIRST_FRAME_INDEX = 1
-
-  const formatFrameNumber = (index) => String(index).padStart(5, '0')
-
-  const [frameIndex, setFrameIndex] = React.useState(FIRST_FRAME_INDEX)
-  const [scrollProgress, setScrollProgress] = React.useState(0)
-  const [loaded, setLoaded] = React.useState(false)
-
-  useEffect(() => {
-    let loadedCount = 0
-    const images = []
-
-    for (let i = FIRST_FRAME_INDEX; i <= TOTAL_FRAMES; i++) {
-      const img = new Image()
-      img.src = `/profile/${formatFrameNumber(i)}.png`
-
-      img.onload = () => {
-        loadedCount++
-        if (loadedCount === TOTAL_FRAMES) {
-          setLoaded(true)
-        }
-      }
-
-      images.push(img)
-    }
-  }, [])
-
-  /* -------------------------------------------------
-   Scroll handler (RAF throttled)
-  --------------------------------------------------*/
-    useEffect(() => {
-    if (!loaded) return
-
-    let ticking = false
-
-    const handleScroll = () => {
-      if (ticking) return
-
-      ticking = true
-      window.requestAnimationFrame(() => {
-        const scrollY = window.scrollY
-        const docHeight =
-          document.documentElement.scrollHeight - window.innerHeight
-
-        const progress = docHeight > 0 ? scrollY / docHeight : 0
-
-        const mappedIndex =
-          FIRST_FRAME_INDEX +
-          Math.floor(progress * (TOTAL_FRAMES - 1))
-
-        const clampedIndex = Math.min(
-          TOTAL_FRAMES,
-          Math.max(FIRST_FRAME_INDEX, mappedIndex),
-        )
-
-        setScrollProgress(progress)
-        setFrameIndex(clampedIndex)
-
-        ticking = false
-      })
-    }
-
-    handleScroll()
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [loaded])
-
-  const src = `/profile/${formatFrameNumber(frameIndex)}.png`
-
-  return (
-    <div className="pointer-events-none fixed inset-0 -z-10 w-full overflow-hidden ">
-      <div className="relative flex h-full w-full items-center justify-center">
-        <div className="relative h-full w-full">
-          {!loaded && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-slate-300 text-sm tracking-wide">
-                Loading animation…
-              </span>
-            </div>
-          )}
-
-          {loaded && (
-            <img
-              src={src}
-              alt={`Frame ${frameIndex}`}
-              className="h-full w-full object-cover"
-              draggable={false}
-            />
-          )}
-        </div>
       </div>
     </div>
   )
